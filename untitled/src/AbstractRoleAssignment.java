@@ -29,6 +29,26 @@ public abstract class AbstractRoleAssignment implements RoleAssignment {
     }
 
     @Override
+    public String assignmentId() {
+        return assignmentId;
+    }
+
+    @Override
+    public User user() {
+        return user;
+    }
+
+    @Override
+    public Role role() {
+        return role;
+    }
+
+    @Override
+    public AssignmentMetadata metadata() {
+        return metadata;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(assignmentId);
     }
