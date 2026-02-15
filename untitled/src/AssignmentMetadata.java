@@ -5,6 +5,6 @@ public record AssignmentMetadata(String assignedBy, String assignedAt, String re
         return new AssignmentMetadata(assignedBy, new Date().toString(), reason);
     }
     String format() {
-        return "assigned by "+assignedBy+" at "+assignedAt+"\n"+"Reason: "+ (reason == null ? "No reason" : reason);
+        return "by "+assignedBy+" at "+assignedAt+"\n"+"Reason: "+ (reason == null ? "No reason" : reason);
     }
 }
