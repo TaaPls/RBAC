@@ -13,26 +13,6 @@ public class PermanentAssignment extends AbstractRoleAssignment{
     }
 
     @Override
-    public String assignmentId() {
-        return assignmentId;
-    }
-
-    @Override
-    public User user() {
-        return user;
-    }
-
-    @Override
-    public Role role() {
-        return role;
-    }
-
-    @Override
-    public AssignmentMetadata metadata() {
-        return metadata;
-    }
-
-    @Override
     public boolean isActive() {
         return !revoked;
     }
