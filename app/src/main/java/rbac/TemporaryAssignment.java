@@ -1,3 +1,5 @@
+package rbac;
+
 import java.time.LocalDate;
 
 public class TemporaryAssignment extends AbstractRoleAssignment {

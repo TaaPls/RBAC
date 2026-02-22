@@ -1,5 +1,6 @@
+package rbac;
+
 import java.util.*;
-import java.util.function.Predicate;
 
 public class UserManager implements Repository<User>{
     private final Map<String, User> users = new HashMap<>();
@@ -28,7 +29,7 @@ public class UserManager implements Repository<User>{
 
     @Override
     public void add(User item) {
-        if (item == null) throw new IllegalArgumentException("User cannot be null");
+        if (item == null) throw new IllegalArgumentException("rbac.User cannot be null");
         if (users.containsKey(item.username()))
             throw new IllegalArgumentException("Key "+item.username()+" already exists");
         users.put(item.username(), item);

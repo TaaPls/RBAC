@@ -1,3 +1,5 @@
+package rbac;
+
 import java.util.Objects;
 import java.util.UUID;
 

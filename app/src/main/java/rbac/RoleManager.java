@@ -1,3 +1,5 @@
+package rbac;
+
 import java.util.*;
 
 public class RoleManager implements Repository<Role> {
@@ -33,8 +35,8 @@ public class RoleManager implements Repository<Role> {
 
     @Override
     public void add(Role item) {
-        if (item == null) throw new IllegalArgumentException("Role cannot be null");
-        if (rolesByName.containsValue(item)) throw new IllegalArgumentException("Role already exists");
+        if (item == null) throw new IllegalArgumentException("rbac.Role cannot be null");
+        if (rolesByName.containsValue(item)) throw new IllegalArgumentException("rbac.Role already exists");
         rolesByName.put(item.name, item);
         rolesById.put(item.id, item);
     }

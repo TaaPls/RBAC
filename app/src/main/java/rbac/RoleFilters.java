@@ -1,3 +1,5 @@
+package rbac;
+
 import java.util.Objects;
 
 public class RoleFilters {
