@@ -14,6 +14,6 @@ public record Permission(String name, String resource, String description) {
         return name+" on "+resource+": "+description;
     }
     public boolean matches(String namePattern, String resourcePattern) {
-        return name.contains(namePattern) && resource.contains(resourcePattern);
+        return name.equalsIgnoreCase(namePattern) && resource.equalsIgnoreCase(resourcePattern);
     }
 }

@@ -10,7 +10,7 @@ public abstract class AbstractRoleAssignment implements RoleAssignment {
     AssignmentMetadata metadata;
 
     public AbstractRoleAssignment(User user, Role role, AssignmentMetadata metadata) {
-        this.assignmentId = UUID.randomUUID().toString();
+        this.assignmentId = "assignment_"+ UUID.randomUUID();
         this.user = user;
         this.role = role;
         this.metadata = metadata;

@@ -9,7 +9,7 @@ public class Role {
     private final Set<Permission> permissions;
 
     public Role(String name) {
-        this.id = String.valueOf(UUID.fromString(name));
+        this.id = "role_"+ UUID.randomUUID();
         this.name = name;
         permissions = new HashSet<>();
     }
