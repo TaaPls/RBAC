@@ -14,6 +14,6 @@ public class RoleFilters {
         return role -> role.hasPermission(permissionName, resource);
     }
     public static RoleFilter hasAtLeastNPermissions(int n) {
-        return role -> role.permissions.size() >= n;
+        return role -> role.getPermissions().size() >= n;
     }
 }

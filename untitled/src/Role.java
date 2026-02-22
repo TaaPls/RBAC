@@ -4,7 +4,7 @@ public class Role {
     String id;
     String name;
     String description;
-    Set<Permission> permissions;
+    private final Set<Permission> permissions;
 
     public Role(String name) {
         this.id = String.valueOf(UUID.fromString(name));
@@ -51,5 +51,9 @@ public class Role {
     @Override
     public String toString() {
         return format();
+    }
+
+    public Set<Permission> getPermissions() {
+        return new HashSet<>(permissions);
     }
 }
