@@ -1,3 +1,5 @@
+package rbac;
+
 @FunctionalInterface
 public interface RoleFilter {
     boolean test(Role role);

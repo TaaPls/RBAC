@@ -1,7 +1,9 @@
+package rbac;
+
 import java.time.LocalDate;
 
 public class TemporaryAssignment extends AbstractRoleAssignment {
-    String expiresAt;
+    String expiresAt = String.valueOf(LocalDate.now().plusMonths(1));
     boolean autoRenew;
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata) {
@@ -12,7 +14,9 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         expiresAt = newExpirationDate;
     }
     boolean isExpired() {
-        return LocalDate.now().isBefore(LocalDate.parse(expiresAt));
+        return LocalDate.now().isAfter(LocalDate.parse(expiresAt));
+        //System.out.println(LocalDate.now());
+        //return true;
     }
     String getTimeRemaining() {
         return LocalDate.now().datesUntil(LocalDate.parse(expiresAt)).toString();

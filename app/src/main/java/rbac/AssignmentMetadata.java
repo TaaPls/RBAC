@@ -1,3 +1,5 @@
+package rbac;
+
 import java.time.LocalDate;
 
 public record AssignmentMetadata(String assignedBy, String assignedAt, String reason) {

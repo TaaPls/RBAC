@@ -1,13 +1,15 @@
+package rbac;
+
 import java.util.*;
 
 public class Role {
     String id;
     String name;
     String description;
-    Set<Permission> permissions;
+    private final Set<Permission> permissions;
 
     public Role(String name) {
-        this.id = String.valueOf(UUID.fromString(name));
+        this.id = "role_"+ UUID.randomUUID();
         this.name = name;
         permissions = new HashSet<>();
     }
@@ -32,7 +34,7 @@ public class Role {
         StringBuilder permissionString = new StringBuilder();
         for (Permission permission : permissions)
             permissionString.append("- ").append(permission.format()).append("\n");
-        return "Role: "+name+" [ID: "+id+"]\n"+"Description: "
+        return "rbac.Role: "+name+" [ID: "+id+"]\n"+"Description: "
                 +description+"\nPermissions ("+permissions.size()
                 +")\n"+permissionString;
     }
@@ -51,5 +53,9 @@ public class Role {
     @Override
     public String toString() {
         return format();
+    }
+
+    public Set<Permission> getPermissions() {
+        return new HashSet<>(permissions);
     }
 }

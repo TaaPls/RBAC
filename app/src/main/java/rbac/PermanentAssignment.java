@@ -1,3 +1,5 @@
+package rbac;
+
 public class PermanentAssignment extends AbstractRoleAssignment{
     boolean revoked = false;
 
