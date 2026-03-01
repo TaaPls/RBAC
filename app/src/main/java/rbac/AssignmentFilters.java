@@ -23,7 +23,7 @@ public class AssignmentFilters {
         return assignment -> !assignment.isActive();
     };
     public static AssignmentFilter byType(String type) {
-        return assignment -> Objects.equals(assignment.assignmentType(), type);
+        return assignment -> Objects.equals(assignment.assignmentType(), type.toUpperCase());
     };
     public static AssignmentFilter assignedBy(String username) {
         return assignment -> Objects.equals(assignment.metadata().assignedBy(), username);

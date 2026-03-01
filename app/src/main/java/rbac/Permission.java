@@ -3,9 +3,9 @@ package rbac;
 public record Permission(String name, String resource, String description) {
     public Permission(String name, String resource, String description) {
         if (name.contains(" "))
-            throw new IllegalArgumentException("name не должно содержать пробелов");
+            throw new IllegalArgumentException("name cannot have spaces");
         if (description.isEmpty())
-            throw new IllegalArgumentException("description не может быть пустым");
+            throw new IllegalArgumentException("description cannot be empty");
         this.name = name.toUpperCase();
         this.resource = resource.toLowerCase();
         this.description = description;
