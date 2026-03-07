@@ -5,36 +5,36 @@ import java.util.regex.Pattern;
 public record User(String username, String fullName, String email) {
     public static User validate(String username, String fullName, String email) {
         if (username == null) {
-            throw new IllegalArgumentException("Username не может быть null");
+            throw new IllegalArgumentException("Username cannot be null");
         }
         if (username.isEmpty()) {
-            throw new IllegalArgumentException("Username не может быть пустой строкой");
+            throw new IllegalArgumentException("Username cannot be empty");
         }
         if (username.length() < 3 || username.length() > 20) {
             throw new IllegalArgumentException(
-                    "Username должен быть от 3 до 20 символов, текущая длина: " + username.length()
+                    "Username must have 3 to 20 symbols, current length: " + username.length()
             );
         }
         if (!Pattern.compile("^\\w+$").matcher(username).matches()) {
             throw new IllegalArgumentException(
-                    "Username может содержать только латинские буквы, цифры и подчеркивание: " + username
+                    "Username can only consist of latin, numbers and underscore: " + username
             );
         }
         if (fullName == null) {
-            throw new IllegalArgumentException("fullName не может быть null");
+            throw new IllegalArgumentException("fullName cannot be null");
         }
         if (fullName.isEmpty()) {
-            throw new IllegalArgumentException("fullName не может быть пустой строкой");
+            throw new IllegalArgumentException("fullName cannot be empty");
         }
         if (email == null) {
-            throw new IllegalArgumentException("Email не может быть null");
+            throw new IllegalArgumentException("Email cannot be null");
         }
         if (email.isEmpty()) {
-            throw new IllegalArgumentException("Email не может быть пустой строкой");
+            throw new IllegalArgumentException("Email cannot be empty");
         }
         if (!Pattern.compile("^\\w+@\\w+\\.\\w+$").matcher(email).matches()) {
             throw new IllegalArgumentException(
-                    "Email должен содержать @ и точку: " + email
+                    "Email must contain '@' and '.': " + email
             );
         }
         return new User(username, fullName, email);

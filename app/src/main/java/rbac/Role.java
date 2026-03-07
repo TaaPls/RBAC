@@ -34,7 +34,7 @@ public class Role {
         StringBuilder permissionString = new StringBuilder();
         for (Permission permission : permissions)
             permissionString.append("- ").append(permission.format()).append("\n");
-        return "rbac.Role: "+name+" [ID: "+id+"]\n"+"Description: "
+        return "Role: "+name+" [ID: "+id+"]\n"+"Description: "
                 +description+"\nPermissions ("+permissions.size()
                 +")\n"+permissionString;
     }
