@@ -39,6 +39,26 @@ public class RBACSystem {
         assignmentManager.add(new PermanentAssignment(admin, roles.getFirst(),
                 new AssignmentMetadata("SystemInit", LocalDate.now().toString(), "Initialization")));
         currentUser = "Admin";
+        AuditLog.log("ADD USER",
+                "SYSTEM",
+                "User manager",
+                "User Admin added");
+        AuditLog.log("ADD ROLE",
+                "SYSTEM",
+                "Role manager",
+                "Role Admin added with 6 permissions");
+        AuditLog.log("ADD ROLE",
+                "SYSTEM",
+                "Role manager",
+                "Role Manager added with 3 permissions");
+        AuditLog.log("ADD ROLE",
+                "SYSTEM",
+                "Role manager",
+                "Role Viewer added with 1 permissions");
+        AuditLog.log("ASSIGN ROLE",
+                "SYSTEM",
+                "Assignment manager",
+                "Role Admin assigned to user Admin permanently");
     }
     public String generateStatistics() {
         StringBuilder str = new StringBuilder("Users (");

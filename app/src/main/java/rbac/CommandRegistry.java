@@ -61,6 +61,10 @@ public class CommandRegistry {
                         return;
                     }
                     system.getUserManager().add(user);
+                    AuditLog.log("ADD USER",
+                            system.getCurrentUser(),
+                            "User manager",
+                            "User "+username+" added");
                     System.out.println("User added successfully");
                 });
         commandParser.registerCommand("user-view",
@@ -117,6 +121,10 @@ public class CommandRegistry {
                         return;
                     }
                     system.getUserManager().remove(user.get());
+                    AuditLog.log("DELETE USER",
+                            system.getCurrentUser(),
+                            "User manager",
+                            "User "+username+" deleted");
                     System.out.println("User deleted successfully");
                 });
         commandParser.registerCommand("user-search",
@@ -198,6 +206,10 @@ public class CommandRegistry {
                     newRole.description = description;
                     permissions.forEach(newRole::addPermission);
                     system.getRoleManager().add(newRole);
+                    AuditLog.log("ADD ROLE",
+                            system.getCurrentUser(),
+                            "Role manager",
+                            "Role "+name+" added with "+permissions.size()+" permissions");
                     System.out.println("Role added successfully");
                 });
         commandParser.registerCommand("role-view",
@@ -254,6 +266,13 @@ public class CommandRegistry {
                         q = scanner.next();
                         if (!q.equals("n")) {
                             system.getRoleManager().remove(role.get());
+                            AuditLog.log("DELETE ROLE",
+                                    system.getCurrentUser(),
+                                    "Role manager",
+                                    "Role "+role.get().name+" deleted with assigned users"+String.join(", ",
+                                            assignments.stream().map(
+                                                    roleAssignment -> roleAssignment.user().username()).
+                                            toList()));
                             System.out.println("Role deletion successful");
                         } else {
                             System.out.println("Role deletion aborted");
@@ -261,6 +280,10 @@ public class CommandRegistry {
                     }
                     else {
                         system.getRoleManager().remove(role.get());
+                        AuditLog.log("DELETE ROLE",
+                                system.getCurrentUser(),
+                                "Role manager",
+                                "Role "+role.get().name+" deleted with no assigned users");
                         System.out.println("Role deletion successful");
                     }
                 });
@@ -375,6 +398,11 @@ public class CommandRegistry {
                             system.getAssignmentManager().add(new PermanentAssignment(user.get(), role.get(),
                                     new AssignmentMetadata(system.getCurrentUser(), LocalDate.now().toString(),
                                             reason)));
+                            AuditLog.log("ASSIGN ROLE",
+                                    system.getCurrentUser(),
+                                    "Assignment manager",
+                                    "Role "+role.get().name+" assigned to user "+user.get().username()+" until "+
+                                            LocalDate.now().plusMonths(1));
                             System.out.println("Role assigned successfully");
                             break;
                         case "temporary":
@@ -388,6 +416,10 @@ public class CommandRegistry {
                                     new AssignmentMetadata(system.getCurrentUser(), LocalDate.now().toString(), reason));
                             roleAssignment.extend(expiresAt);
                             system.getAssignmentManager().add(roleAssignment);
+                            AuditLog.log("ASSIGN ROLE",
+                                    system.getCurrentUser(),
+                                    "Assignment manager",
+                                    "Role "+role.get().name+" assigned to user "+user.get().username()+" permanently");
                             System.out.println("Role assigned successfully");
                             break;
                         default:
@@ -423,6 +455,10 @@ public class CommandRegistry {
                             AssignmentFilters.byUser(user.get()));
                     String id = system.getAssignmentManager().findByFilter(filter).getFirst().assignmentId();
                     system.getAssignmentManager().revokeAssignment(id);
+                    AuditLog.log("REVOKE ROLE",
+                            system.getCurrentUser(),
+                            "Assignment manager",
+                            "Role "+role.get().name+" revoked from user "+user.get().username());
                     System.out.println("Assignment revoked successfully");
                 });
         commandParser.registerCommand("assignment-list",
@@ -666,6 +702,9 @@ public class CommandRegistry {
                         System.exit(0);
                     }
                 });
+        commandParser.registerCommand("audit-log",
+                "List log",
+                (Scanner scanner, RBACSystem system) -> AuditLog.printLog());
         return commandParser;
     }
 }
