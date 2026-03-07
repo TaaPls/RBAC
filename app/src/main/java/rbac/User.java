@@ -1,43 +1,21 @@
 package rbac;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public record User(String username, String fullName, String email) {
     public static User validate(String username, String fullName, String email) {
-        if (username == null) {
-            throw new IllegalArgumentException("Username cannot be null");
+        if (!ValidationUtils.isValidUsername(username)) {
+            throw new IllegalArgumentException("Username is not valid");
         }
-        if (username.isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be empty");
+        ValidationUtils.requireNonEmpty(fullName);
+        String[] str = fullName.split(" ");
+        String normalizedName = String.join(" ",
+                Arrays.stream(str).map(ValidationUtils::normalizeString).toList());
+        if (!ValidationUtils.isValidEmail(email)) {
+            throw new IllegalArgumentException("Email is not valid");
         }
-        if (username.length() < 3 || username.length() > 20) {
-            throw new IllegalArgumentException(
-                    "Username must have 3 to 20 symbols, current length: " + username.length()
-            );
-        }
-        if (!Pattern.compile("^\\w+$").matcher(username).matches()) {
-            throw new IllegalArgumentException(
-                    "Username can only consist of latin, numbers and underscore: " + username
-            );
-        }
-        if (fullName == null) {
-            throw new IllegalArgumentException("fullName cannot be null");
-        }
-        if (fullName.isEmpty()) {
-            throw new IllegalArgumentException("fullName cannot be empty");
-        }
-        if (email == null) {
-            throw new IllegalArgumentException("Email cannot be null");
-        }
-        if (email.isEmpty()) {
-            throw new IllegalArgumentException("Email cannot be empty");
-        }
-        if (!Pattern.compile("^\\w+@\\w+\\.\\w+$").matcher(email).matches()) {
-            throw new IllegalArgumentException(
-                    "Email must contain '@' and '.': " + email
-            );
-        }
-        return new User(username, fullName, email);
+        return new User(username, normalizedName, email);
     }
     public String format() {
         return username + " (" + fullName + ") "+"<"+email+">";

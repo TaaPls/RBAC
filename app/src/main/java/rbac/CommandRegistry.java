@@ -380,6 +380,10 @@ public class CommandRegistry {
                         case "temporary":
                             System.out.println("Enter: expire date YYYY-MM-DD");
                             expiresAt = scanner.next();
+                            if (!ValidationUtils.isValidDate(expiresAt)) {
+                                System.out.println("Date is not valid");
+                                return;
+                            }
                             TemporaryAssignment roleAssignment = new TemporaryAssignment(user.get(), role.get(),
                                     new AssignmentMetadata(system.getCurrentUser(), LocalDate.now().toString(), reason));
                             roleAssignment.extend(expiresAt);
@@ -529,6 +533,10 @@ public class CommandRegistry {
                     System.out.println("Enter: expire date YYYY-MM-DD");
                     String expiresAt;
                     expiresAt = scanner.next();
+                    if (!ValidationUtils.isValidDate(expiresAt)) {
+                        System.out.println("Date is not valid");
+                        return;
+                    }
                     assignment.extend(expiresAt);
                     System.out.println("Assignment extended successfully");
                 });
