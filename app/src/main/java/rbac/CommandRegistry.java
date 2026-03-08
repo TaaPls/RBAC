@@ -15,7 +15,10 @@ public class CommandRegistry {
                     if (input == "") {
                         UserManager manager = system.getUserManager();
                         System.out.println("Users (" + manager.count() + "):");
-                        manager.findAll().forEach(user-> System.out.println(user.format()));
+                        List<String[]> rows = new ArrayList<>();
+                        manager.findAll().forEach(user-> rows.add(new String[]{user.username(), user.fullName(),
+                        "<"+user.email()+">"}));
+                        System.out.println(FormatUtils.formatTable(new String[]{"Username", "Full Name", "Email"}, rows));
                         return;
                     }
                     field = input.split("\\s+")[0];
