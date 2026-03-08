@@ -705,6 +705,51 @@ public class CommandRegistry {
         commandParser.registerCommand("audit-log",
                 "List log",
                 (Scanner scanner, RBACSystem system) -> AuditLog.printLog());
+        commandParser.registerCommand("report-users",
+                "Generate and save users report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generateUserReport(
+                            system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    System.out.println("\nSave report? filename/n");
+                    String input;
+                    scanner.nextLine();
+                    input = scanner.nextLine();
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-roles",
+                "Generate and save roles report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generateRoleReport(
+                            system.getRoleManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    System.out.println("\nSave report? filename/n");
+                    String input;
+                    scanner.nextLine();
+                    input = scanner.nextLine();
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-matrix",
+                "Generate and save users x resources report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generatePermissionMatrix(
+                            system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    System.out.println("\nSave report? filename/n");
+                    String input;
+                    scanner.nextLine();
+                    input = scanner.nextLine();
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
+                });
         return commandParser;
     }
 }

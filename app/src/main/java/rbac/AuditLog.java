@@ -38,7 +38,7 @@ public class AuditLog {
         System.out.println(str);
     }
     public static void saveToFile(String filename) {
-        try (FileWriter writer = new FileWriter(filename)) {
+        try (FileWriter writer = new FileWriter(filename.concat(".txt"))) {
             for (AuditEntry entry : entries) {
                 String str = entry.timestamp() + ": " + entry.action() + " on " +
                         entry.target() + " by " + entry.performer() +
