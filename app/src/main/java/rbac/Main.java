@@ -9,9 +9,10 @@ public class Main {
         CommandParser commandParser = CommandRegistry.getParser();
         Scanner scanner = new Scanner(System.in);
         String input;
+        scanner.nextLine();
 
         while (true) {
-            input = scanner.next();
+            input = scanner.nextLine();
             commandParser.parseAndExecute(input, scanner, rbacSystem);
         }
     }

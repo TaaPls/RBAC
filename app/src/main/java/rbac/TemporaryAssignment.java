@@ -15,8 +15,6 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
     }
     boolean isExpired() {
         return LocalDate.now().isAfter(LocalDate.parse(expiresAt));
-        //System.out.println(LocalDate.now());
-        //return true;
     }
     String getTimeRemaining() {
         return LocalDate.now().datesUntil(LocalDate.parse(expiresAt)).toString();

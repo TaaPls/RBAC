@@ -9,14 +9,16 @@ public class CommandRegistry {
         commandParser.registerCommand("user-list",
                 "List of all users",
                 (Scanner scanner, RBACSystem system) -> {
-                    System.out.println("field value or empty");
                     String field, value, input;
-                    scanner.nextLine();
-                    input = scanner.nextLine();
+                    input = ConsoleUtils.promptString(scanner,
+                            "field value or empty", false);
                     if (input == "") {
                         UserManager manager = system.getUserManager();
                         System.out.println("Users (" + manager.count() + "):");
-                        manager.findAll().forEach(user-> System.out.println(user.format()));
+                        List<String[]> rows = new ArrayList<>();
+                        manager.findAll().forEach(user-> rows.add(new String[]{user.username(), user.fullName(),
+                        "<"+user.email()+">"}));
+                        System.out.println(FormatUtils.formatTable(new String[]{"Username", "Full Name", "Email"}, rows));
                         return;
                     }
                     field = input.split("\\s+")[0];
@@ -47,13 +49,9 @@ public class CommandRegistry {
                 (Scanner scanner, RBACSystem system) -> {
                     String username, fullname, email;
                     User user;
-                    System.out.println("Username:");
-                    username = scanner.next();
-                    System.out.println("Full name:");
-                    scanner.nextLine();
-                    fullname = scanner.nextLine();
-                    System.out.println("Email:");
-                    email = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username:", true);
+                    fullname = ConsoleUtils.promptString(scanner, "Enter full name:", true);
+                    email = ConsoleUtils.promptString(scanner, "Enter email:", true);
                     try {
                         user = User.validate(username, fullname, email);
                     } catch (IllegalArgumentException e) {
@@ -61,14 +59,17 @@ public class CommandRegistry {
                         return;
                     }
                     system.getUserManager().add(user);
+                    AuditLog.log("ADD USER",
+                            system.getCurrentUser(),
+                            "User manager",
+                            "User "+username+" added");
                     System.out.println("User added successfully");
                 });
         commandParser.registerCommand("user-view",
                 "Show user info",
                 (Scanner scanner, RBACSystem system) -> {
                     String username;
-                    System.out.println("Enter username");
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username:", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -84,13 +85,9 @@ public class CommandRegistry {
                 "Update user data",
                 (Scanner scanner, RBACSystem system) -> {
                     String username, newFullname, newEmail;
-                    System.out.println("Enter username");
-                    username = scanner.next();
-                    System.out.println("Enter new full name");
-                    scanner.nextLine();
-                    newFullname = scanner.nextLine();
-                    System.out.println("Enter new email");
-                    newEmail = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username:", true);
+                    newFullname = ConsoleUtils.promptString(scanner, "Enter new full name:", true);
+                    newEmail = ConsoleUtils.promptString(scanner, "Enter new email:", true);
                     try {
                         User.validate(username, newFullname, newEmail);
                     } catch (IllegalArgumentException e) {
@@ -109,31 +106,27 @@ public class CommandRegistry {
                 "Delete user",
                 (Scanner scanner, RBACSystem system) -> {
                     String username;
-                    System.out.println("Enter username");
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username:", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
                         return;
                     }
                     system.getUserManager().remove(user.get());
+                    AuditLog.log("DELETE USER",
+                            system.getCurrentUser(),
+                            "User manager",
+                            "User "+username+" deleted");
                     System.out.println("User deleted successfully");
                 });
         commandParser.registerCommand("user-search",
                 "Apply filters to search",
                 (Scanner scanner, RBACSystem system) ->{
                     String field, value;
-                    System.out.println("""
-                Enter: field of search
-                Fields:
-                username
-                email
-                email-domain
-                fullname""");
-                    field = scanner.next();
-                    System.out.println("Enter: value");
-                    scanner.nextLine();
-                    value = scanner.nextLine();
+                    field = ConsoleUtils.promptString(scanner,
+                            "Enter: field of search\nFields:\nusername\nemail\nemail-domain\nfullname",
+                            true);
+                    value = ConsoleUtils.promptString(scanner, "Enter value:", true);
                     UserFilter filter;
                     switch (field) {
                         case "username":
@@ -164,26 +157,15 @@ public class CommandRegistry {
                 "Add new role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name, description;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
-                    System.out.println("Enter role description");
-                    //scanner.nextLine();
-                    description = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name:", true);
+                    description = ConsoleUtils.promptString(scanner, "Enter role description:", false);
                     String permName, resource, permDesc, q;
                     List<Permission> permissions = new ArrayList<>();
                     while (true) {
-                        System.out.println("Add permissions to new role? y/n?");
-                        q = scanner.next();
-                        if (!q.equals("n")) {
-                            System.out.println("Permission name");
-                            permName = scanner.next();
-                            System.out.println("Permission resource");
-                            scanner.nextLine();
-                            resource = scanner.nextLine();
-                            System.out.println("Permission description");
-                            //scanner.nextLine();
-                            permDesc = scanner.nextLine();
+                        if (ConsoleUtils.promptYesNo(scanner, "Add permissions to new role? yes/n?")) {
+                            permName = ConsoleUtils.promptString(scanner, "Enter permission name", true);
+                            resource = ConsoleUtils.promptString(scanner, "Enter permission resource", true);
+                            permDesc = ConsoleUtils.promptString(scanner, "Enter permission description", true);
                             try {
                                 permissions.add(new Permission(permName, resource, permDesc));
                             } catch (IllegalArgumentException e) {
@@ -198,15 +180,17 @@ public class CommandRegistry {
                     newRole.description = description;
                     permissions.forEach(newRole::addPermission);
                     system.getRoleManager().add(newRole);
+                    AuditLog.log("ADD ROLE",
+                            system.getCurrentUser(),
+                            "Role manager",
+                            "Role "+name+" added with "+permissions.size()+" permissions");
                     System.out.println("Role added successfully");
                 });
         commandParser.registerCommand("role-view",
                 "Show role info",
                 (Scanner scanner, RBACSystem system) -> {
                     String name;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);;
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -218,11 +202,8 @@ public class CommandRegistry {
                 "Set new description for role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name, newDescription;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
-                    System.out.println("Enter new description");
-                    newDescription = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);
+                    newDescription = ConsoleUtils.promptString(scanner, "Enter new permission description", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -235,9 +216,7 @@ public class CommandRegistry {
                 "Delete role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -249,11 +228,15 @@ public class CommandRegistry {
                     if (!assignments.isEmpty()) {
                         System.out.println("Role is assigned to users:");
                         assignments.forEach(assignment -> System.out.println(assignment.user().format()));
-                        System.out.println("Confirm role deletion: yes/n");
-                        String q;
-                        q = scanner.next();
-                        if (!q.equals("n")) {
+                        if (ConsoleUtils.promptYesNo(scanner, "Confirm role deletion: yes/n")) {
                             system.getRoleManager().remove(role.get());
+                            AuditLog.log("DELETE ROLE",
+                                    system.getCurrentUser(),
+                                    "Role manager",
+                                    "Role "+role.get().name+" deleted with assigned users"+String.join(", ",
+                                            assignments.stream().map(
+                                                    roleAssignment -> roleAssignment.user().username()).
+                                            toList()));
                             System.out.println("Role deletion successful");
                         } else {
                             System.out.println("Role deletion aborted");
@@ -261,6 +244,10 @@ public class CommandRegistry {
                     }
                     else {
                         system.getRoleManager().remove(role.get());
+                        AuditLog.log("DELETE ROLE",
+                                system.getCurrentUser(),
+                                "Role manager",
+                                "Role "+role.get().name+" deleted with no assigned users");
                         System.out.println("Role deletion successful");
                     }
                 });
@@ -268,16 +255,10 @@ public class CommandRegistry {
                 "Add new permission to role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name, permName, permResource, permDescription;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
-                    System.out.println("Enter permission name");
-                    permName = scanner.nextLine();
-                    System.out.println("Enter permission resource");
-                    permResource = scanner.nextLine();
-                    System.out.println("Enter permission description");
-                    //scanner.nextLine();
-                    permDescription = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name:", true);
+                    permName = ConsoleUtils.promptString(scanner, "Enter permission name:", true);
+                    permResource = ConsoleUtils.promptString(scanner, "Enter permission resource:", true);
+                    permDescription = ConsoleUtils.promptString(scanner, "Enter permission description:", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -290,41 +271,44 @@ public class CommandRegistry {
                 "Remove permission from role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name:", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
                         return;
                     }
                     List<Permission> permissions = role.get().getPermissions().stream().toList();
-                    System.out.println("Choose permission to delete (0 to abandon):");
-                    int i = 0;
-                    for (;i < permissions.size(); i++) {
-                        System.out.println((i+1)+": "+permissions.get(i).format());
-                    }
-                    if ((i = scanner.nextInt()) != 0 && i <= permissions.size()) {
-                        system.getRoleManager().removePermissionFromRole(name, permissions.get(i-1));
-                        System.out.println("Permission removed successfully");
-                    } else {
+                    System.out.println();
+                    Permission i = ConsoleUtils.promptChoice(scanner, "Choose permission to delete (0 to abandon):",
+                            permissions);
+                    if (i == null) {
                         System.out.println("Permission removal aborted");
+                        return;
                     }
+                    system.getRoleManager().removePermissionFromRole(name, i);
+                    System.out.println("Permission removed successfully");
+//                    int i = 0;
+//                    for (;i < permissions.size(); i++) {
+//                        System.out.println((i+1)+": "+permissions.get(i).format());
+//                    }
+//                    if ((i = scanner.nextInt()) != 0 && i <= permissions.size()) {
+//                        system.getRoleManager().removePermissionFromRole(name, permissions.get(i-1));
+//                        System.out.println("Permission removed successfully");
+//                    } else {
+//                        System.out.println("Permission removal aborted");
+//                    }
                 });
         commandParser.registerCommand("role-search",
                 "Filter role list",
                 (Scanner scanner, RBACSystem system) -> {
                     String field, value;
-                    System.out.println("""
-                Enter: field
-                Fields:
-                name
-                permission name resource
-                min-permission-count""");
-                    field = scanner.next();
-                    System.out.println("Enter value");
-                    scanner.nextLine();
-                    value = scanner.nextLine();
+                    field = ConsoleUtils.promptString(scanner, """
+                    Enter: field
+                    Fields:
+                    name
+                    permission name resource
+                    min-permission-count""", true);
+                    value = ConsoleUtils.promptString(scanner, "Enter value:", true);
                     RoleFilter filter;
                     switch (field) {
                         case "name":
@@ -347,8 +331,7 @@ public class CommandRegistry {
                 "Assign role to user",
                 (Scanner scanner, RBACSystem system) -> {
                     String username;
-                    System.out.println("Enter username");
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -357,14 +340,9 @@ public class CommandRegistry {
                     System.out.println("Available roles to choose:");
                     system.getRoleManager().findAll().forEach(role -> System.out.println(role.format()));
                     String name, type, reason, expiresAt;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
-                    System.out.println("Enter assignment type: temporary/permanent");
-                    type = scanner.next();
-                    System.out.println("Enter reason");
-                    scanner.nextLine();
-                    reason = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);
+                    type = ConsoleUtils.promptString(scanner, "Enter assignment type: temporary/permanent", true);
+                    reason = ConsoleUtils.promptString(scanner, "Enter reason", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -375,15 +353,27 @@ public class CommandRegistry {
                             system.getAssignmentManager().add(new PermanentAssignment(user.get(), role.get(),
                                     new AssignmentMetadata(system.getCurrentUser(), LocalDate.now().toString(),
                                             reason)));
+                            AuditLog.log("ASSIGN ROLE",
+                                    system.getCurrentUser(),
+                                    "Assignment manager",
+                                    "Role "+role.get().name+" assigned to user "+user.get().username()+" until "+
+                                            LocalDate.now().plusMonths(1));
                             System.out.println("Role assigned successfully");
                             break;
                         case "temporary":
-                            System.out.println("Enter: expire date YYYY-MM-DD");
-                            expiresAt = scanner.next();
+                            expiresAt = ConsoleUtils.promptString(scanner, "Enter: expire date YYYY-MM-DD", true);
+                            if (!ValidationUtils.isValidDate(expiresAt)) {
+                                System.out.println("Date is not valid");
+                                return;
+                            }
                             TemporaryAssignment roleAssignment = new TemporaryAssignment(user.get(), role.get(),
                                     new AssignmentMetadata(system.getCurrentUser(), LocalDate.now().toString(), reason));
                             roleAssignment.extend(expiresAt);
                             system.getAssignmentManager().add(roleAssignment);
+                            AuditLog.log("ASSIGN ROLE",
+                                    system.getCurrentUser(),
+                                    "Assignment manager",
+                                    "Role "+role.get().name+" assigned to user "+user.get().username()+" permanently");
                             System.out.println("Role assigned successfully");
                             break;
                         default:
@@ -393,9 +383,8 @@ public class CommandRegistry {
         commandParser.registerCommand("revoke-role",
                 "Revoke role from user",
                 (Scanner scanner, RBACSystem system) -> {
-                    System.out.println("Enter username");
                     String username;
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -406,9 +395,7 @@ public class CommandRegistry {
                             AssignmentFilters.byUser(user.get()).and(AssignmentFilters.activeOnly()));
                     assignments.forEach(System.out::println);
                     String name;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -419,6 +406,10 @@ public class CommandRegistry {
                             AssignmentFilters.byUser(user.get()));
                     String id = system.getAssignmentManager().findByFilter(filter).getFirst().assignmentId();
                     system.getAssignmentManager().revokeAssignment(id);
+                    AuditLog.log("REVOKE ROLE",
+                            system.getCurrentUser(),
+                            "Assignment manager",
+                            "Role "+role.get().name+" revoked from user "+user.get().username());
                     System.out.println("Assignment revoked successfully");
                 });
         commandParser.registerCommand("assignment-list",
@@ -430,8 +421,7 @@ public class CommandRegistry {
                 "List all assignments for user",
                 (Scanner scanner, RBACSystem system) -> {
                     String username;
-                    System.out.println("Enter username");
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -445,9 +435,7 @@ public class CommandRegistry {
                 "List all assignments for role",
                 (Scanner scanner, RBACSystem system) -> {
                     String name;
-                    System.out.println("Enter role name");
-                    scanner.nextLine();
-                    name = scanner.nextLine();
+                    name = ConsoleUtils.promptString(scanner, "Enter role name", true);
                     Optional<Role> role = system.getRoleManager().findByName(name);
                     if (role.isEmpty()) {
                         System.out.println("Role "+name+" not found");
@@ -475,14 +463,12 @@ public class CommandRegistry {
                 "Extend a temporary assignment",
                 (Scanner scanner, RBACSystem system) -> {
                     String type;
-                    System.out.println("u+r/id");
-                    type = scanner.next();
+                    type = ConsoleUtils.promptString(scanner, "u+r/id", true);
                     TemporaryAssignment assignment;
                     switch (type) {
                         case "id":
                             String id;
-                            System.out.println("Enter: id");
-                            id = scanner.next();
+                            id = ConsoleUtils.promptString(scanner, "Enter: id", true);
                             Optional<RoleAssignment> roleAssignment = system.getAssignmentManager().findById(id);
                             if (roleAssignment.isEmpty()) {
                                 System.out.println("No assignment with id "+id);
@@ -495,11 +481,8 @@ public class CommandRegistry {
                             break;
                         case "u+r":
                             String username, name;
-                            System.out.println("Enter username");
-                            username = scanner.next();
-                            System.out.println("Enter role name");
-                            scanner.nextLine();
-                            name = scanner.nextLine();
+                            username = ConsoleUtils.promptString(scanner, "Enter: username", true);
+                            name = ConsoleUtils.promptString(scanner, "Enter role name", true);
                             Optional<Role> role = system.getRoleManager().findByName(name);
                             if (role.isEmpty()) {
                                 System.out.println("Role "+name+" not found");
@@ -526,9 +509,12 @@ public class CommandRegistry {
                             System.out.println("id or u+r");
                             return;
                     }
-                    System.out.println("Enter: expire date YYYY-MM-DD");
                     String expiresAt;
-                    expiresAt = scanner.next();
+                    expiresAt = ConsoleUtils.promptString(scanner, "Enter: expire date YYYY-MM-DD", true);
+                    if (!ValidationUtils.isValidDate(expiresAt)) {
+                        System.out.println("Date is not valid");
+                        return;
+                    }
                     assignment.extend(expiresAt);
                     System.out.println("Assignment extended successfully");
                 });
@@ -536,19 +522,16 @@ public class CommandRegistry {
                 "Filter assignments list",
                 (Scanner scanner, RBACSystem system) -> {
                     String field, value;
-                    System.out.println("""
-                Enter: field
-                Fields:
-                user
-                role
-                type
-                state
-                assigned-after
-                expire-before""");
-                    field = scanner.next();
-                    System.out.println("Enter value");
-                    scanner.nextLine();
-                    value = scanner.nextLine();
+                    field = ConsoleUtils.promptString(scanner, """
+                    Enter: field
+                    Fields:
+                    user
+                    role
+                    type
+                    state
+                    assigned-after
+                    expire-before""", true);
+                    value = ConsoleUtils.promptString(scanner, "Enter value", true);
                     AssignmentFilter filter;
                     switch (field) {
                         case "user":
@@ -591,8 +574,7 @@ public class CommandRegistry {
                 "List permissions of user",
                 (Scanner scanner, RBACSystem system) -> {
                     String username;
-                    System.out.println("Enter username");
-                    username = scanner.next();
+                    username = ConsoleUtils.promptString(scanner, "Enter username", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -605,13 +587,9 @@ public class CommandRegistry {
                 "Check if user has permission",
                 (Scanner scanner, RBACSystem system) -> {
                     String username, name, resource;
-                    System.out.println("Enter username");
-                    username = scanner.next();
-                    System.out.println("Enter permission name");
-                    name = scanner.next();
-                    System.out.println("Enter permission resource");
-                    scanner.nextLine();
-                    resource = scanner.nextLine();
+                    username = ConsoleUtils.promptString(scanner, "Enter username:", true);
+                    name = ConsoleUtils.promptString(scanner, "Enter permission name:", true);
+                    resource = ConsoleUtils.promptString(scanner, "Enter permission resource:", true);
                     Optional<User> user = system.getUserManager().findByUsername(username);
                     if (user.isEmpty()) {
                         System.out.println("User "+username+" not found");
@@ -651,12 +629,51 @@ public class CommandRegistry {
         commandParser.registerCommand("exit",
                 "Exits application",
                 (Scanner scanner, RBACSystem system) -> {
-                    System.out.println("Are you sure you want to quit the application? yes/n");
-                    String input;
-                    input = scanner.next();
-                    if (input.equals("yes")) {
+                    if (ConsoleUtils.promptYesNo(scanner, "Are you sure you want to quit the application? yes/n")) {
                         System.exit(0);
                     }
+                });
+        commandParser.registerCommand("audit-log",
+                "List log",
+                (Scanner scanner, RBACSystem system) -> AuditLog.printLog());
+        commandParser.registerCommand("report-users",
+                "Generate and save users report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generateUserReport(
+                            system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    String input;
+                    input = ConsoleUtils.promptString(scanner, "\nSave report? filename/n", true);
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-roles",
+                "Generate and save roles report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generateRoleReport(
+                            system.getRoleManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    String input;
+                    input = ConsoleUtils.promptString(scanner, "\nSave report? filename/n", true);
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-matrix",
+                "Generate and save users x resources report",
+                (Scanner scanner, RBACSystem system) -> {
+                    String report = ReportGenerator.generatePermissionMatrix(
+                            system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+                    String input;
+                    input = ConsoleUtils.promptString(scanner, "\nSave report? filename/n", true);
+                    if (input.equals("n"))
+                        return;
+                    ReportGenerator.exportToFile(report, input);
+                    System.out.println("Report saved successfully");
                 });
         return commandParser;
     }
