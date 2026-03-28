@@ -2,10 +2,12 @@ package rbac;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 public class AssignmentManager implements Repository<RoleAssignment>{
-    Map<String, RoleAssignment> assignments = new HashMap<>();
+    ConcurrentMap<String, RoleAssignment> assignments = new ConcurrentHashMap<>();
 
     public List<RoleAssignment> findByUser(User user) {
         return assignments.values().stream().filter(AssignmentFilters.byUser(user)::test).toList();
@@ -43,25 +45,27 @@ public class AssignmentManager implements Repository<RoleAssignment>{
                 collect(Collectors.toSet());
     }
     public void revokeAssignment(String assignmentId) {
-        if (assignments.containsKey(assignmentId) &&
-                assignments.get(assignmentId) instanceof PermanentAssignment o) {
-            o.Revoke();
-        }
+        assignments.computeIfPresent(assignmentId, (key, value) -> {
+            if (value instanceof PermanentAssignment o) {
+                o.Revoke();
+            }
+            return value;
+        });
     }
     public void extendTemporaryAssignment(String assignmentId, String newExpirationDate) {
-        if (assignments.containsKey(assignmentId) &&
-                assignments.get(assignmentId) instanceof TemporaryAssignment o) {
-            o.extend(newExpirationDate);
-        }
+        assignments.computeIfPresent(assignmentId, (key, value) -> {
+            if (value instanceof TemporaryAssignment o) {
+                o.extend(newExpirationDate);
+            }
+            return value;
+        });
     }
 
     @Override
     public void add(RoleAssignment item) {
         if (item == null) throw new IllegalArgumentException("Assignment cannot be null");
-        if (assignments.containsValue(item))
-            throw new IllegalArgumentException("Assignment with id "+item.assignmentId()+" already exists");
         if (userHasRole(item.user(), item.role())) return;
-        assignments.put(item.assignmentId(), item);
+        assignments.putIfAbsent(item.assignmentId(), item);
     }
 
     @Override

@@ -1,10 +1,12 @@
 package rbac;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class RoleManager implements Repository<Role> {
-    private final Map<String, Role> rolesById = new HashMap<>();
-    private final Map<String, Role> rolesByName = new HashMap<>();
+    private final ConcurrentMap<String, Role> rolesById = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Role> rolesByName = new ConcurrentHashMap<>();
 
     public Optional<Role> findByName(String name) {
         return Optional.ofNullable(rolesByName.get(name));
@@ -19,14 +21,16 @@ public class RoleManager implements Repository<Role> {
         return rolesByName.containsKey(name);
     }
     public void addPermissionToRole(String roleName, Permission permission) {
-        if (rolesByName.containsKey(roleName)) {
-            rolesByName.get(roleName).addPermission(permission);
-        }
+        rolesByName.computeIfPresent(roleName, (key, value) -> {
+            value.addPermission(permission);
+            return value;
+        });
     }
     public void removePermissionFromRole(String roleName, Permission permission) {
-        if (rolesByName.containsKey(roleName)) {
-            rolesByName.get(roleName).removePermission(permission);
-        }
+        rolesByName.computeIfPresent(roleName, (key, value) -> {
+            value.removePermission(permission);
+            return value;
+        });
     }
     public List<Role> findRolesWithPermission(String permissionName, String resource) {
         return rolesByName.values().stream().
@@ -36,16 +40,14 @@ public class RoleManager implements Repository<Role> {
     @Override
     public void add(Role item) {
         if (item == null) throw new IllegalArgumentException("rbac.Role cannot be null");
-        if (rolesByName.containsValue(item)) throw new IllegalArgumentException("rbac.Role already exists");
-        rolesByName.put(item.name, item);
-        rolesById.put(item.id, item);
+        rolesByName.putIfAbsent(item.name, item);
+        rolesById.putIfAbsent(item.id, item);
     }
 
     @Override
     public boolean remove(Role item) {
         if (item == null) return false;
         return rolesById.remove(item.id, item) && rolesByName.remove(item.name, item);
-
     }
 
     @Override
