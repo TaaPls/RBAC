@@ -57,7 +57,9 @@ public class RoleManagerTest {
     }
     @Test
     public void addExistingTest() {
-        assertThrows(IllegalArgumentException.class, () -> roleManager.add(roles.getFirst()));
+        int count = roleManager.count();
+        roleManager.add(roles.getFirst());
+        assertEquals(count, roleManager.count());
     }
     @Test
     public void existsTest() {

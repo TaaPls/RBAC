@@ -2,6 +2,7 @@ package rbac;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CommandRegistry {
     public static CommandParser getParser() {
@@ -630,6 +631,12 @@ public class CommandRegistry {
                 "Exits application",
                 (Scanner scanner, RBACSystem system) -> {
                     if (ConsoleUtils.promptYesNo(scanner, "Are you sure you want to quit the application? yes/n")) {
+                        system.getExecutorService().shutdown();
+                        try {
+                            system.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                         System.exit(0);
                     }
                 });

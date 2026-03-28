@@ -3,12 +3,15 @@ package rbac;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RBACSystem {
     private final UserManager userManager = new UserManager();
     private final RoleManager roleManager = new RoleManager();
     private final AssignmentManager assignmentManager = new AssignmentManager();
     private String currentUser;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(8);
 
     public void setCurrentUser(String username) {
         currentUser = username;
@@ -92,5 +95,9 @@ public class RBACSystem {
 
     public AssignmentManager getAssignmentManager() {
         return assignmentManager;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 }
