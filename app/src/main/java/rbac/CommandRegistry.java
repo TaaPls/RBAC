@@ -621,11 +621,8 @@ public class CommandRegistry {
         commandParser.registerCommand("clear",
                 "Clears console",
                 (Scanner scanner, RBACSystem system) -> {
-                    //System.out.println("\033[H\033[2J");
-                    //System.out.flush();
-                    for (int i = 0; i < 50; i++) { // Print a sufficient number of newlines
-                        System.out.println();
-                    }
+                    System.out.println("\033[H\033[2J");
+                    System.out.flush();
                 });
         commandParser.registerCommand("exit",
                 "Exits application",
@@ -634,6 +631,7 @@ public class CommandRegistry {
                         system.getExecutorService().shutdown();
                         try {
                             system.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
+                            AuditLog.shutdown();
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
@@ -681,6 +679,31 @@ public class CommandRegistry {
                         return;
                     ReportGenerator.exportToFile(report, input);
                     System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-users-async",
+                "Generate users report asynchronously",
+                (Scanner scanner, RBACSystem system) -> {
+                    system.getExecutorService().submit(() -> {
+                        String report = ReportGenerator.generateUserReport(
+                                system.getUserManager(), system.getAssignmentManager());
+                        ReportGenerator.exportToFile(report, "user_report");
+                        System.out.println("Report saved async successfully");
+                    });
+                });
+        commandParser.registerCommand("save-async",
+                "Save data asynchronously",
+                (Scanner scanner, RBACSystem system) -> {
+                    system.getExecutorService().submit(() -> {
+                        String str = ReportGenerator.generateUserReport(system.getUserManager(),
+                                system.getAssignmentManager()) +
+                                "\n\n\n" +
+                                ReportGenerator.generateRoleReport(system.getRoleManager(),
+                                        system.getAssignmentManager()) +
+                                "\n\n\n" +
+                                ReportGenerator.generatePermissionMatrix(system.getUserManager(),
+                                        system.getAssignmentManager());
+                        ReportGenerator.exportToFile(str, "system_data");
+                    });
                 });
         return commandParser;
     }

@@ -6,16 +6,42 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AuditLog {
-    private static final List<AuditEntry> entries = new ArrayList<>();
+    private static final BlockingQueue<AuditEntry> logQueue = new LinkedBlockingQueue<>();
+    private static final List<AuditEntry> entries = new CopyOnWriteArrayList<>();
+    private static final ExecutorService logger = Executors.newSingleThreadExecutor();
+    private static final AtomicBoolean running = new AtomicBoolean(true);
 
-    public static void log(String action, String performer, String target, String details) {
-        entries.add(new AuditEntry(LocalDateTime.now().toString(),
-                action,
-                performer,
-                target,
-                details));
+//    static {
+//        logger.submit(() -> {
+//            while (running.get()) {
+//                try {
+//                    AuditEntry entry = logQueue.poll(1, TimeUnit.SECONDS);
+//                    if (entry != null) {
+//                        entries.add(entry);
+//                    }
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                    break;
+//                }
+//            }
+//            List<AuditEntry> remaining = new ArrayList<>();
+//            logQueue.drainTo(remaining);
+//            entries.addAll(remaining);
+//        });
+//    }
+
+    public static CompletableFuture<Void> log(String action, String performer, String target, String details) {
+        return CompletableFuture.runAsync(() -> {
+            entries.add(new AuditEntry(LocalDateTime.now().toString(),
+                    action,
+                    performer,
+                    target,
+                    details));
+        }, logger);
     }
     public static List<AuditEntry> getAll() {
         return new ArrayList<>(entries);
@@ -48,5 +74,24 @@ public class AuditLog {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    public static ExecutorService getLogger() {
+        return logger;
+    }
+    public static void shutdown() {
+        running.set(false);
+
+        logger.shutdown();
+        try {
+            if (!logger.awaitTermination(10, TimeUnit.SECONDS)) {
+                logger.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            logger.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+    public static int logSize() {
+        return logQueue.size() + entries.size();
     }
 }

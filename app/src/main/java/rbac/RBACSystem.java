@@ -11,7 +11,7 @@ public class RBACSystem {
     private final RoleManager roleManager = new RoleManager();
     private final AssignmentManager assignmentManager = new AssignmentManager();
     private String currentUser;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(8);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     public void setCurrentUser(String username) {
         currentUser = username;
