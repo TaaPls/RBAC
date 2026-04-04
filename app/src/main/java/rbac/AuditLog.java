@@ -36,36 +36,36 @@ public class AuditLog {
 
     public static CompletableFuture<Void> log(String action, String performer, String target, String details) {
         return CompletableFuture.runAsync(() -> {
-            entries.add(new AuditEntry(LocalDateTime.now().toString(),
+            logQueue.add(new AuditEntry(LocalDateTime.now().toString(),
                     action,
                     performer,
                     target,
                     details));
         }, logger);
     }
-    public static List<AuditEntry> getAll() {
-        return new ArrayList<>(entries);
+    public synchronized static List<AuditEntry> getAll() {
+        return new ArrayList<>(logQueue);
     }
-    public static List<AuditEntry> getByPerformer(String performer) {
-        return entries.stream().filter(auditEntry -> Objects.equals(auditEntry.performer(), performer)).
+    public synchronized static List<AuditEntry> getByPerformer(String performer) {
+        return logQueue.stream().filter(auditEntry -> Objects.equals(auditEntry.performer(), performer)).
                 toList();
     }
-    public static List<AuditEntry> getByAction(String action) {
-        return entries.stream().filter(auditEntry -> Objects.equals(auditEntry.action(), action)).
+    public synchronized static List<AuditEntry> getByAction(String action) {
+        return logQueue.stream().filter(auditEntry -> Objects.equals(auditEntry.action(), action)).
                 toList();
     }
-    public static void printLog() {
+    public synchronized static void printLog() {
         StringBuilder str = new StringBuilder();
-        entries.forEach(auditEntry -> {
+        logQueue.forEach(auditEntry -> {
                 str.append(auditEntry.timestamp()).append(": ").append(auditEntry.action()).append(" on ").
                         append(auditEntry.target()).append(" by ").append(auditEntry.performer()).
                         append(":\n\t").append(auditEntry.details()).append("\n\n");
         });
         System.out.println(str);
     }
-    public static void saveToFile(String filename) {
+    public synchronized static void saveToFile(String filename) {
         try (FileWriter writer = new FileWriter(filename.concat(".txt"))) {
-            for (AuditEntry entry : entries) {
+            for (AuditEntry entry : logQueue) {
                 String str = entry.timestamp() + ": " + entry.action() + " on " +
                         entry.target() + " by " + entry.performer() +
                         ":\n\t" + entry.details() + "\n";

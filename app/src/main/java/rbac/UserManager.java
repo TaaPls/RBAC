@@ -10,17 +10,17 @@ public class UserManager implements Repository<User>{
     public Optional<User> findByUsername(String username) {
         return Optional.ofNullable(users.get(username));
     };
-    public Optional<User> findByEmail(String email) {
+    public synchronized Optional<User> findByEmail(String email) {
         return users.values().stream().
                 filter(user -> Objects.equals(user.email(), email)).findAny();
     }
-    public List<User> findByFilter(UserFilter filter) {
+    public synchronized List<User> findByFilter(UserFilter filter) {
         return users.values().stream().filter(filter::test).toList();
     };
-    public List<User> findByFilterParallel(UserFilter filter) {
+    public synchronized List<User> findByFilterParallel(UserFilter filter) {
         return users.values().parallelStream().filter(filter::test).toList();
     };
-    public List<User> findAll(UserFilter filter, Comparator<User> sorter) {
+    public synchronized List<User> findAll(UserFilter filter, Comparator<User> sorter) {
         return users.values().stream().filter(filter::test).sorted(sorter).toList();
     };
     public boolean exists(String username) {
@@ -48,7 +48,7 @@ public class UserManager implements Repository<User>{
     }
 
     @Override
-    public List<User> findAll() {
+    public synchronized List<User> findAll() {
         return new ArrayList<>(users.values());
     }
 

@@ -11,13 +11,13 @@ public class RoleManager implements Repository<Role> {
     public Optional<Role> findByName(String name) {
         return Optional.ofNullable(rolesByName.get(name));
     }
-    public List<Role> findByFilter(RoleFilter filter) {
+    public synchronized List<Role> findByFilter(RoleFilter filter) {
         return rolesById.values().stream().filter(filter::test).toList();
     }
-    public List<Role> findByFilterParallel(RoleFilter filter) {
+    public synchronized List<Role> findByFilterParallel(RoleFilter filter) {
         return rolesById.values().parallelStream().filter(filter::test).toList();
     }
-    public List<Role> findAll(RoleFilter filter, Comparator<Role> sorter) {
+    public synchronized List<Role> findAll(RoleFilter filter, Comparator<Role> sorter) {
         return rolesById.values().stream().filter(filter::test).sorted(sorter).toList();
     }
     public boolean exists(String name) {
@@ -35,7 +35,7 @@ public class RoleManager implements Repository<Role> {
             return value;
         });
     }
-    public List<Role> findRolesWithPermission(String permissionName, String resource) {
+    public synchronized List<Role> findRolesWithPermission(String permissionName, String resource) {
         return rolesByName.values().stream().
                 filter(RoleFilters.hasPermission(permissionName, resource)::test).toList();
     }
@@ -59,7 +59,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     @Override
-    public List<Role> findAll() {
+    public synchronized List<Role> findAll() {
         return new ArrayList<>(rolesByName.values());
     }
 

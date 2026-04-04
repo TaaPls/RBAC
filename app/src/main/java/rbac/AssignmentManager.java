@@ -9,39 +9,39 @@ import java.util.stream.Collectors;
 public class AssignmentManager implements Repository<RoleAssignment>{
     ConcurrentMap<String, RoleAssignment> assignments = new ConcurrentHashMap<>();
 
-    public List<RoleAssignment> findByUser(User user) {
+    public synchronized List<RoleAssignment> findByUser(User user) {
         return assignments.values().stream().filter(AssignmentFilters.byUser(user)::test).toList();
     }
-    public List<RoleAssignment> findByRole(Role role) {
+    public synchronized List<RoleAssignment> findByRole(Role role) {
         return assignments.values().stream().filter(AssignmentFilters.byRole(role)::test).toList();
     }
-    public List<RoleAssignment> findByFilter(AssignmentFilter filter) {
+    public synchronized List<RoleAssignment> findByFilter(AssignmentFilter filter) {
         return assignments.values().stream().filter(filter::test).toList();
     }
-    public List<RoleAssignment> findByFilterParallel(AssignmentFilter filter) {
+    public synchronized List<RoleAssignment> findByFilterParallel(AssignmentFilter filter) {
         return assignments.values().parallelStream().filter(filter::test).toList();
     }
-    public List<RoleAssignment> findAll(AssignmentFilter filter, Comparator<RoleAssignment> sorter) {
+    public synchronized List<RoleAssignment> findAll(AssignmentFilter filter, Comparator<RoleAssignment> sorter) {
         return assignments.values().stream().filter(filter::test).sorted(sorter).toList();
     }
-    public List<RoleAssignment> getActiveAssignments() {
+    public synchronized List<RoleAssignment> getActiveAssignments() {
         return assignments.values().stream().filter(AssignmentFilters.activeOnly()::test).toList();
     }
-    public List<RoleAssignment> getExpiredAssignments() {
+    public synchronized List<RoleAssignment> getExpiredAssignments() {
         return assignments.values().stream().
                 filter(AssignmentFilters.expiringBefore(LocalDate.now().toString())::test).toList();
     }
-    public boolean userHasRole(User user, Role role) {
+    public synchronized boolean userHasRole(User user, Role role) {
         return assignments.values().stream().
                 anyMatch(AssignmentFilters.byUser(user).and(AssignmentFilters.byRole(role))::test);
     }
-    public boolean userHasPermission(User user, String permissionName, String resource) {
+    public synchronized boolean userHasPermission(User user, String permissionName, String resource) {
         return assignments.values().stream().
                 filter(AssignmentFilters.byUser(user)::test).
                 anyMatch(roleAssignment ->
                         roleAssignment.role().hasPermission(permissionName, resource));
     }
-    public Set<Permission> getUserPermissions(User user) {
+    public synchronized Set<Permission> getUserPermissions(User user) {
         return assignments.values().stream().
                 filter(AssignmentFilters.byUser(user)::test).
                 flatMap(roleAssignment -> roleAssignment.role().getPermissions().stream()).
@@ -83,7 +83,7 @@ public class AssignmentManager implements Repository<RoleAssignment>{
     }
 
     @Override
-    public List<RoleAssignment> findAll() {
+    public synchronized List<RoleAssignment> findAll() {
         return new ArrayList<>(assignments.values());
     }
 

@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AuditLogTest {
 
-    @AfterAll
-    static void after() {
-        AuditLog.shutdown();
-    }
+//    @AfterAll
+//    static void after() {
+//        AuditLog.shutdown();
+//    }
 
     @Test
     void logTest() {
@@ -31,7 +31,7 @@ class AuditLogTest {
     @Test
     void getByPerformerTest() {
         var future = AuditLog.log(
-                "ADD",
+                "ADD USER",
                 "SYSTEM",
                 "users",
                 "Add new user"
@@ -45,14 +45,14 @@ class AuditLogTest {
     @Test
     void getByActionTest() {
         var future = AuditLog.log(
-                "ADD",
+                "ADD USER",
                 "SYSTEM",
                 "users",
                 "Add new user"
         );
         future.join();
         for (AuditEntry entry : AuditLog.getAll()) {
-            assertEquals("ADD", entry.action());
+            assertEquals("ADD USER", entry.action());
         }
     }
 }
