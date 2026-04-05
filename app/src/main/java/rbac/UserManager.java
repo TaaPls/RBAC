@@ -1,38 +1,39 @@
 package rbac;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class UserManager implements Repository<User>{
-    private final Map<String, User> users = new HashMap<>();
+    private final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
     public Optional<User> findByUsername(String username) {
         return Optional.ofNullable(users.get(username));
     };
-    public Optional<User> findByEmail(String email) {
+    public synchronized Optional<User> findByEmail(String email) {
         return users.values().stream().
                 filter(user -> Objects.equals(user.email(), email)).findAny();
     }
-    public List<User> findByFilter(UserFilter filter) {
+    public synchronized List<User> findByFilter(UserFilter filter) {
         return users.values().stream().filter(filter::test).toList();
     };
-    public List<User> findAll(UserFilter filter, Comparator<User> sorter) {
+    public synchronized List<User> findByFilterParallel(UserFilter filter) {
+        return users.values().parallelStream().filter(filter::test).toList();
+    };
+    public synchronized List<User> findAll(UserFilter filter, Comparator<User> sorter) {
         return users.values().stream().filter(filter::test).sorted(sorter).toList();
     };
     public boolean exists(String username) {
         return users.containsKey(username);
     };
     public void update(String username, String newFullName, String newEmail) {
-        if (users.containsKey(username)) {
-            users.replace(username, new User(username, newFullName, newEmail));
-        }
+        users.replace(username, new User(username, newFullName, newEmail));
     };
 
     @Override
     public void add(User item) {
-        if (item == null) throw new IllegalArgumentException("rbac.User cannot be null");
-        if (users.containsKey(item.username()))
-            throw new IllegalArgumentException("Key "+item.username()+" already exists");
-        users.put(item.username(), item);
+        if (item == null) throw new IllegalArgumentException("User cannot be null");
+        users.putIfAbsent(item.username(), item);
     }
 
     @Override
@@ -47,7 +48,7 @@ public class UserManager implements Repository<User>{
     }
 
     @Override
-    public List<User> findAll() {
+    public synchronized List<User> findAll() {
         return new ArrayList<>(users.values());
     }
 

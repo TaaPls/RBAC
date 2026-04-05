@@ -2,6 +2,7 @@ package rbac;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CommandRegistry {
     public static CommandParser getParser() {
@@ -620,16 +621,21 @@ public class CommandRegistry {
         commandParser.registerCommand("clear",
                 "Clears console",
                 (Scanner scanner, RBACSystem system) -> {
-                    //System.out.println("\033[H\033[2J");
-                    //System.out.flush();
-                    for (int i = 0; i < 50; i++) { // Print a sufficient number of newlines
-                        System.out.println();
-                    }
+                    System.out.println("\033[H\033[2J");
+                    System.out.flush();
                 });
         commandParser.registerCommand("exit",
                 "Exits application",
                 (Scanner scanner, RBACSystem system) -> {
                     if (ConsoleUtils.promptYesNo(scanner, "Are you sure you want to quit the application? yes/n")) {
+                        system.getExecutorService().shutdown();
+                        try {
+                            system.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
+                            AuditLog.shutdown();
+                            system.getScheduledExecutorService().shutdown();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                         System.exit(0);
                     }
                 });
@@ -674,6 +680,31 @@ public class CommandRegistry {
                         return;
                     ReportGenerator.exportToFile(report, input);
                     System.out.println("Report saved successfully");
+                });
+        commandParser.registerCommand("report-users-async",
+                "Generate users report asynchronously",
+                (Scanner scanner, RBACSystem system) -> {
+                    system.getExecutorService().submit(() -> {
+                        String report = ReportGenerator.generateUserReport(
+                                system.getUserManager(), system.getAssignmentManager());
+                        ReportGenerator.exportToFile(report, "user_report");
+                        System.out.println("Report saved async successfully");
+                    });
+                });
+        commandParser.registerCommand("save-async",
+                "Save data asynchronously",
+                (Scanner scanner, RBACSystem system) -> {
+                    system.getExecutorService().submit(() -> {
+                        String str = ReportGenerator.generateUserReport(system.getUserManager(),
+                                system.getAssignmentManager()) +
+                                "\n\n\n" +
+                                ReportGenerator.generateRoleReport(system.getRoleManager(),
+                                        system.getAssignmentManager()) +
+                                "\n\n\n" +
+                                ReportGenerator.generatePermissionMatrix(system.getUserManager(),
+                                        system.getAssignmentManager());
+                        ReportGenerator.exportToFile(str, "system_data");
+                    });
                 });
         return commandParser;
     }

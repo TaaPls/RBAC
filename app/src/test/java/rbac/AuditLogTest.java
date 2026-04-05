@@ -1,5 +1,7 @@
 package rbac;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -8,26 +10,33 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AuditLogTest {
 
+//    @AfterAll
+//    static void after() {
+//        AuditLog.shutdown();
+//    }
+
     @Test
     void logTest() {
-        int n = AuditLog.getAll().size();
-        AuditLog.log(
+        int n = AuditLog.logSize();
+        var future = AuditLog.log(
                 "ADD",
                 "SYSTEM",
                 "users",
                 "Add new user"
         );
+        future.join();
         assertEquals(n+1, AuditLog.getAll().size());
     }
 
     @Test
     void getByPerformerTest() {
-        AuditLog.log(
-                "ADD",
+        var future = AuditLog.log(
+                "ADD USER",
                 "SYSTEM",
                 "users",
                 "Add new user"
         );
+        future.join();
         for (AuditEntry entry : AuditLog.getAll()) {
             assertEquals("SYSTEM", entry.performer());
         }
@@ -35,14 +44,15 @@ class AuditLogTest {
 
     @Test
     void getByActionTest() {
-        AuditLog.log(
-                "ADD",
+        var future = AuditLog.log(
+                "ADD USER",
                 "SYSTEM",
                 "users",
                 "Add new user"
         );
+        future.join();
         for (AuditEntry entry : AuditLog.getAll()) {
-            assertEquals("ADD", entry.action());
+            assertEquals("ADD USER", entry.action());
         }
     }
 }

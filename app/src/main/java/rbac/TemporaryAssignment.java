@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class TemporaryAssignment extends AbstractRoleAssignment {
     String expiresAt = String.valueOf(LocalDate.now().plusMonths(1));
+    private boolean revoked = false;
     boolean autoRenew;
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata) {
@@ -34,5 +35,11 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
     public String summary() {
         return "["+assignmentType()+"] "+role.name+" assigned to "+user.username()+" "+metadata+"\n"
                 +"Status: "+(isActive() ? "ACTIVE" : "INACTIVE")+"\nExpires at: "+expiresAt;
+    }
+    public void Revoke() {
+        revoked = true;
+    }
+    public boolean isRevoked() {
+        return revoked;
     }
 }

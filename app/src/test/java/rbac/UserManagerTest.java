@@ -45,7 +45,9 @@ public class UserManagerTest {
     }
     @Test
     public void addExistingTest() {
-        assertThrows(IllegalArgumentException.class, () -> userManager.add(users.getFirst()));
+        int count = userManager.count();
+        userManager.add(users.getFirst());
+        assertEquals(count, userManager.count());
     }
     @Test
     public void existsTest() {

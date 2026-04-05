@@ -14,7 +14,7 @@ public class ReportGenerator {
         StringBuilder str = new StringBuilder();
         userManager.findAll().forEach(user -> str.append(user.username()).append(": ").append(
                 String.join(", ", assignmentManager.findByUser(user).
-                        stream().map(assignment -> assignment.role().name).toList())).append("\n"));
+                        parallelStream().map(assignment -> assignment.role().name).toList())).append("\n"));
         return str.toString();
     }
     public static String generateRoleReport(RoleManager roleManager, AssignmentManager
@@ -29,7 +29,7 @@ public class ReportGenerator {
             assignmentManager) {
         Set<User> users = new HashSet<>(userManager.findAll());
         Set<Permission> permissions = assignmentManager.findAll().
-                stream().flatMap(roleAssignment -> roleAssignment.
+                parallelStream().flatMap(roleAssignment -> roleAssignment.
                         role().getPermissions().stream()).collect(Collectors.toSet());
         Set<String> resources = permissions.stream().map(Permission::resource).collect(Collectors.toSet());
 
