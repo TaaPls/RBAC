@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class RBACSystem {
     private final UserManager userManager = new UserManager();
@@ -12,6 +14,8 @@ public class RBACSystem {
     private final AssignmentManager assignmentManager = new AssignmentManager();
     private String currentUser;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     public void setCurrentUser(String username) {
         currentUser = username;
@@ -62,6 +66,16 @@ public class RBACSystem {
                 "SYSTEM",
                 "Assignment manager",
                 "Role Admin assigned to user Admin permanently");
+        scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            assignmentManager.getExpiredAssignments().forEach(assignment -> {
+                if (assignment instanceof TemporaryAssignment o) {
+                    if (o.isRevoked()) return;
+                    o.Revoke();
+                    AuditLog.log("REVOKE ASSIGNMENT", "SYSTEM", "assignment_"+assignment.assignmentId(),
+                            "Assignment expired");
+                }
+            });
+        }, 10L, 10L, TimeUnit.SECONDS);
     }
     public String generateStatistics() {
         StringBuilder str = new StringBuilder("Users (");
@@ -99,5 +113,8 @@ public class RBACSystem {
 
     public ExecutorService getExecutorService() {
         return executorService;
+    }
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
     }
 }

@@ -1,6 +1,7 @@
 package rbac;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,10 +14,11 @@ class RBACSystemTest {
         rbacSystem = new RBACSystem();
     }
 
-    //@AfterAll
-    //static void after() {
-    //    AuditLog.shutdown();
-    //}
+    @AfterEach
+    void tearDown() {
+        rbacSystem.getExecutorService().shutdown();
+        rbacSystem.getScheduledExecutorService().shutdown();
+    }
 
     @Test
     void initializationTest() {

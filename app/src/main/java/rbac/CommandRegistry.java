@@ -632,6 +632,7 @@ public class CommandRegistry {
                         try {
                             system.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
                             AuditLog.shutdown();
+                            system.getScheduledExecutorService().shutdown();
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }

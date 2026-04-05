@@ -37,6 +37,7 @@ public class LoadTest {
     @AfterEach
     void tearDown() {
         system.getExecutorService().shutdown();
+        system.getScheduledExecutorService().shutdown();
         //AuditLog.shutdown();
         if (!exceptions.isEmpty()) {
             System.err.println("Exceptions during test: " + exceptions.size());
