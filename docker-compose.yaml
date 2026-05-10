@@ -1,0 +1,86 @@
+services:
+  user:
+    build: ./user
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    container_name: taxi-user
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taxi_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+  trip:
+    build: ./trip
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    container_name: taxi-trip
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taxi_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_REDIS_HOST: redis
+      USER-SERVICE_URL: http://user:8080
+      NOTIFICATION-SERVICE_URL: http://notification:8082
+    depends_on:
+      db:
+        condition: service_healthy
+      user:
+        condition: service_started
+      redis:
+        condition: service_healthy
+  notification:
+    build: ./notification
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    container_name: taxi-notification
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taxi_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    container_name: taxi-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    container_name: taxi-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taxi_db
+      POSTGRES_USER: postgres
+
+volumes:
+  db-data:
+  redis-data:
